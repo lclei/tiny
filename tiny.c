@@ -105,9 +105,56 @@ int parse_uri(char *uri, char *filename, char *cgiargs){
 }
 
 
-void serve_static(int fd, char *filename, int filesize){}
-void get_filetype(char *filename, char *filetype){}
-void serve_dynamic(int fd, char *filename, char *cgiargs){}
+void serve_static(int fd, char *filename, int filesize){
+	int srcfd;
+	char *srcp, filetype[MAXLINE], buf[MAXLINE*10];
+
+	get_filetype(filename, filetype);
+	sprintf(buf, "HTTP/1.0 200 OK\r\n");
+	sprintf(buf, "%sServer: Tiny Web Server\r\n",buf);
+	sprintf(buf, "%sConnection: close\r\n",buf);
+	sprintf(buf, "%sContent-length: %d\r\n",buf,filesize);
+	sprintf(buf, "%sContent-type: %s\r\n\r\n",buf,filetype);
+	write(fd,buf,strlen(buf));
+	printf("Response headers:\n");
+	printf("%s",buf);
+
+	srcfd = open(filename,O_RDONLY, 0);
+	srcp = mmap(0, filesize, PROT_READ. MAP_PRIVATE, srcfd, 0);
+	close(srcfd);
+	write(fd,srcp,filesize);
+	munmap(srcp,filesize);
+}
+
+void get_filetype(char *filename, char *filetype){
+	 if(strstr(filename,".html"))
+	   strcpy(filetype, "text/html");
+	 else if (strstr(filename,".gif"))
+	   strcpy(filetype, "image/gif");
+	else if (strstr(filename,".png"))
+	   strcpy(filetype, "image/png");
+	else if (strstr(filename,".jpg"))
+	   strcpy(filetype, "image/jpeg");
+	else 
+	   strcpy(filetype, "image/plain");
+}
+
+void serve_dynamic(int fd, char *filename, char *cgiargs){
+	char buf[MAXLINE],*emptylist[] = {NULL};
+
+	sprintf(buf,"HTTP/1.0 200 OK\r\n");
+	wrtie(fd,buf,strlen(buf));
+	sprintf(buf,"Server: Tiny Web Server\r\n");
+	write(fd,buf,strlen(buf));
+
+	if(fork()==0) {
+		setrnv("QUERY_STRING",cgiargs,1);
+		dup2(fd,STDOUT_FILENO);
+		execve(filename,emptylist,environ);
+	}
+	wait(NULL);
+}
+
 void clienterror(int fd, char*cause, char *errnum, char *shortmsg, char *longmsg){
 	char buf[MAXLINE], body[100*MAXLINE];
 	sprintf(body,"<html><title>Tiny Error</title>");
