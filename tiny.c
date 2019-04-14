@@ -46,7 +46,7 @@ void doit(int fd){
 		clienterror(fd, method, "501", "Not implementedd","Tiny does not implement this method");
 		return;
 	}
-	read_requesthdrs(fd);
+	//read_requesthdrs(fd);
 	is_static = parse_uri(uri,filename,cgiargs);
 	if(stat(filename,&sbuf)<0){
 		clienterror(fd, filename, "404", "Not found", "Tiny couldn't find this file");
@@ -120,7 +120,7 @@ void serve_static(int fd, char *filename, int filesize){
 	printf("%s",buf);
 
 	srcfd = open(filename,O_RDONLY, 0);
-	srcp = mmap(0, filesize, PROT_READ. MAP_PRIVATE, srcfd, 0);
+	srcp = mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
 	close(srcfd);
 	write(fd,srcp,filesize);
 	munmap(srcp,filesize);
@@ -143,12 +143,12 @@ void serve_dynamic(int fd, char *filename, char *cgiargs){
 	char buf[MAXLINE],*emptylist[] = {NULL};
 
 	sprintf(buf,"HTTP/1.0 200 OK\r\n");
-	wrtie(fd,buf,strlen(buf));
+	write(fd,buf,strlen(buf));
 	sprintf(buf,"Server: Tiny Web Server\r\n");
 	write(fd,buf,strlen(buf));
 
 	if(fork()==0) {
-		setrnv("QUERY_STRING",cgiargs,1);
+		setenv("QUERY_STRING",cgiargs,1);
 		dup2(fd,STDOUT_FILENO);
 		execve(filename,emptylist,environ);
 	}
@@ -161,13 +161,13 @@ void clienterror(int fd, char*cause, char *errnum, char *shortmsg, char *longmsg
 	sprintf(body,"%s<body bgcolor=""ffffff"">\r\n",body);
 	sprintf(body,"%s%s: %s\r\n",body,errnum,shortmsg);
 	sprintf(body,"%s<p>%s: %s\r\n",body,longmsg,cause);
-	sprintf(body,"%s<hr><em>The Tiny Web servver</em>\r\n",body);
+	sprintf(body,"%s<hr><em>The Tiny Web server</em>\r\n",body);
 
 	sprintf(buf, "HTTP/1.0 %s %s\r\n",errnum,shortmsg);
 	write(fd,buf,strlen(buf));
 	sprintf(buf, "Content-type: text/html\r\n");
 	write(fd,buf,strlen(buf));
-	sprintf(buf, "Content-length: %d\r\n",(int)strlen(body));
+	sprintf(buf, "Content-length: %d\r\n\r\n",(int)strlen(body));
 	write(fd,buf,strlen(buf));
 	write(fd,body,strlen(body));
 }

@@ -10,7 +10,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 
+extern char **environ;
 #define LISTENQ 1024
 #define MAXLINE 1024
 typedef struct sockaddr SA;
