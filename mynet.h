@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <signal.h>
 
 extern char **environ;
 #define LISTENQ 1024
