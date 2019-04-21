@@ -12,6 +12,8 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <signal.h>
+#include <sys/select.h>
+#include <pthread.h>
 
 extern char **environ;
 #define LISTENQ 1024
